@@ -14,9 +14,9 @@ and statistical analysis is used to determine which variation performs better fo
 <br><br>
 <h2>How to install?</h2>
   1. Use pip to download this package - <b><i>pip install django-AB-project</i></b>
-  <br><br>
-  2. Add <i>'ab',</i> to <b>INSTALLED_APPS</b> in settings.py
-  
+  <br>
+  2. Add 'ab', to INSTALLED_APPS in settings.py:
+
 ```Python
   INSTALLED_APPS = [
     ...
@@ -45,6 +45,7 @@ and statistical analysis is used to determine which variation performs better fo
 
 ```Python
   from django.views.generic import ListView
+  from split_testing.utils import ab_init, success_goal
 
   class IntroPage(ListView):
     model = YourModel
@@ -106,3 +107,92 @@ and statistical analysis is used to determine which variation performs better fo
 <p>If you don't see any error, and page looks like normal - go to the admin page and check <i>"Ab_Split_Testing"</i>!</p>
 <p>Here you see new created object, using your <i>page_name</i>. Click on and you will see some data. Run another browser, or
 re-enter in your browser and load main page again, and you will see changes.</p>
+<p>We successfully initialized our test, but we need collect not only users who entered to our page, but also users, who will make success actions. It would be simple if you need to test forms on your page, but we can test other element's too, just use a little bit of JavaScript.</p>
+
+<h3>Testing forms (FormView)</h3>
+<p>You just need to edit your <i>form_valid</i> method:</p>
+
+```Python
+from django.shortcuts import redirect
+from django.views.generic import FormView
+from split_testing.utils import ab_init, success_goal
+
+class SecondPage(FormView):
+    # A/B testing variables
+    template_name = 'pages/second_page.html'
+    alternative_template_name = 'alt_pages/second_page.html'
+    page_name = 'second page'
+    form_class = someForm
+    
+    def dispatch(self, request, *args, **kwargs):
+        # init for a/b, add +1 to "Entered"
+        ab_init(self)
+        # call the view
+        return super(SecondPage, self).dispatch(request, *args, **kwargs)
+        
+    def form_valid(self, form):
+        # Process your forms
+        ... 
+        ...
+        # A/B set successfully goal before redirect
+        success_goal(self)
+        
+        return redirect('third_page')
+```
+<p><i>success_goal(self)</i> is <b>second</b> function what this package implement.</p>
+
+<h3>Testing using JS (Any other View)</h3>
+<p>First, you need edit your both html files. Just add to bottom of the body tag this function:</p>
+  
+```javascript
+  <script type="text/javascript">
+    function Sendgoal(url_page) {
+      $.ajax({
+        url: url_page,
+        data: {'is_clicked': 'True',
+                csrfmiddlewaretoken: "{{ csrf_token }}"},
+        type:"POST",
+        success: function (data) {
+          console.log('POST success');
+        },
+      });
+    }
+  </script>
+```
+<p>Then, you need find your button, or link which pressed by user will be send goal to server</p>
+
+```html
+<a href='#' onclick="Sendgoal('{% url 'intro_page' %}')">Click me!</a>
+```
+<p>We need to edit our IntroPage class, to handle POST request:</p>
+
+```python
+class IntroPage(ListView):
+    model = YourModel
+    template_name = 'pages/intro.html'
+    alternative_template_name = 'alt_pages/intro.html'
+    page_name = 'intro page'
+
+    def dispatch(self, request, *args, **kwargs):
+        # init for a/b, add +1 to "Entered"
+        ab_init(self)
+        # call the view
+        return super(IntroPage, self).dispatch(request, *args, **kwargs)
+        
+    def post(self, request, *args, **kwargs):
+        is_clicked = request.POST.get('is_clicked')
+        if is_clicked == 'True':
+            # A/B set success goal
+            success_goal(self)
+            return JsonResponse({'OK':'OK'})
+        # if POST request is not equal what we send in template
+        return JsonResponse({'KO':'KO'})
+```
+
+  <p>That's it! Your test is ready, try to test it using another browser.</p>
+  
+  
+<br>
+<i>(Method views version)</i>
+<br><br>
+<p>Coming soon!</p>
