@@ -202,17 +202,19 @@ class IntroPage(ListView):
   <p>But if you don't know how method post work, lets read it step-by-step:</p>
   
   <p>Here we are define our method, and get from POST request if user actually click our element</p>
-  ```python
-    def post(self, request, *args, **kwargs):
-        is_clicked = request.POST.get('is_clicked')
-  ```
+  
+```Python
+def post(self, request, *args, **kwargs):
+    is_clicked = request.POST.get('is_clicked')
+```
   
   <p>If <b>is_clicked</b> equal to <b>'True'</b> string, we will call success_goal method, and save it to the system.</p>
-  ```python
-    if is_clicked == 'True':
-            # A/B set success goal
-            success_goal(self)
-  ```
+  
+```Python
+if is_clicked == 'True':
+    # A/B set success goal
+    success_goal(self)
+```
   
   and then we just return some data into our html, to clarify, if method register or not our goal.
   
