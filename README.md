@@ -76,7 +76,7 @@ and statistical analysis is used to determine which variation performs better fo
 ```Python
    alternative_template_name = 'alt_pages/intro.html'
 ```
-<p>Here you need to enter a path to your alternative html file, which you want to test with <i><b>template_file</b></i></p>
+<p>Here you need to enter a path to your alternative html file, which you want to test with <i><b>template_name</b></i></p>
 <p>Next is:</p>
 
 ```Python
@@ -109,8 +109,14 @@ and statistical analysis is used to determine which variation performs better fo
 re-enter in your browser and load main page again, and you will see changes.</p>
 <p>We successfully initialized our test, but we need collect not only users who entered to our page, but also users, who will make success actions. It would be simple if you need to test forms on your page, but we can test other element's too, just use a little bit of JavaScript.</p>
 
-<h3>Testing forms (FormView)</h3>
-<p>You just need to edit your <i>form_valid</i> method:</p>
+<h3>Testing with forms</h3>
+<p>ab_init method say if user successfully loaded page, and also remember which page need to show in next time, but to make A/B testing come to life, we need some more extra functionality, like when user do successful action.
+</p>
+<p><b>Hey, but what is "successful action"?</b> you might want to ask. Let's imagine shop page, and big "BUY" button. You need define, which button will give more sales, red or green. You created two pages, which looks like the same, but with different buttons, and then, when users will find your page, system will remember all users, and which percent of them clicked by this button. After a few days\weeks, when you collect enough of information, you will see in percentage, which button makes more revenue.</p>
+
+
+<p>A useful thing, right? So here we have two ways to do that, first, when we have form on our page:</p>
+
 
 ```Python
 from django.shortcuts import redirect
@@ -140,8 +146,10 @@ class SecondPage(FormView):
         return redirect('third_page')
 ```
 <p><i>success_goal(self)</i> is <b>second</b> function what this package implement.</p>
+<p>When this function is triggered, system will remember this action, and to prevent when user click by this button a lot, and to not screw up our experiment, will be saved just one click per user.</p>
 
-<h3>Testing using JS (Any other View)</h3>
+
+<h3>Testing using JS (jQuery, actually)</h3>
 <p>First, you need edit your both html files. Just add to bottom of the body tag this function:</p>
   
 ```javascript
@@ -164,7 +172,7 @@ class SecondPage(FormView):
 ```html
 <a href='#' onclick="Sendgoal('{% url 'intro_page' %}')">Click me!</a>
 ```
-<p>We need to edit our IntroPage class, to handle POST request:</p>
+<p>Our work in HTML files is done, now we need to edit our IntroPage class, to handle POST requests:</p>
 
 ```python
 class IntroPage(ListView):
@@ -190,6 +198,23 @@ class IntroPage(ListView):
 ```
 
   <p>That's it! Your test is ready, try to test it using another browser.</p>
+  
+  <p>But if you don't know how method post work, lets read it step-by-step:</p>
+  
+  <p>Here we are define our method, and get from POST request if user actually click our element</p>
+  ```python
+    def post(self, request, *args, **kwargs):
+        is_clicked = request.POST.get('is_clicked')
+  ```
+  
+  <p>If <b>is_clicked</b> equal to <b>'True'</b> string, we will call success_goal method, and save it to the system.</p>
+  ```python
+    if is_clicked == 'True':
+            # A/B set success goal
+            success_goal(self)
+  ```
+  
+  and then we just return some data into our html, to clarify, if method register or not our goal.
   
   
 <br>
