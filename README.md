@@ -1,8 +1,7 @@
 <h1> Django-AB-project </h1>
-<p>Here is my first package for <b>Django</b>. I tried to write it so that it would be easy for you to use this package.</p>
 
-<p>It provide four function in utils.py and some models in models.py.</p>
-<p>This would be easy to used this package with Generic views in Django, but this can be work properly in methods, just used another technic.</p>
+<p>This package provides four function in utils.py and some models in models.py.</p>
+<p>This would be easy to use this package with Generic views in Django, but this can be work properly in functional-based views, just using other two functions.</p>
 
 (You can read about Generic Views in Django here - https://docs.djangoproject.com/en/1.11/topics/class-based-views/)
 <h2>What is A/B testing?</h2>
